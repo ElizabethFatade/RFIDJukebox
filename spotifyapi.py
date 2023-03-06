@@ -53,12 +53,29 @@ class SpotifyApi:
     @return None
     """
     def updateMap(self, rfidID=None, songName=None, artist=None):
-        for i in range(0,100,50):
-            track_results = self.sp.search(q='track:'+songName, type='track', limit=50,offset=1)
-            for i, t in enumerate(track_results['tracks']['items']):
-                if t['artists'][0]['name'].lower() == artist.lower() and t['name'].lower() == songName.lower():
-                    self.songMapping[rfidID] = t['uri']
-
+        try:
+            for i in range(0,100,50):
+                track_results = self.sp.search(q='track:'+songName, type='track', limit=50,offset=1)
+                #print(track_results)
+                for i, t in enumerate(track_results['tracks']['items']):
+        
+                    #if t['name'].lower() == songName.lower():
+                        #print(t['artists'][0]['name'].lower())
+                    #print(t['artists'][0]['name'].lower())
+                    #if t['artists'][0]['name'].lower() == artist.lower():
+                        #print(t['name'].lower())
+                    if t['artists'][0]['name'].lower() == artist.lower() and t['name'].lower() == songName.lower():
+                        #print(t['uri'])
+                        print(t['artists'][0]['name'].lower())
+                        print(t['artists'][0]['album'].lower())
+                        self.songMapping[rfidID] = t['uri']
+        except:
+            print("An exception occurred")
+    
+    def getCurrentlyPlaying(self):
+        print(self.sp.current_user_playing_track())
+        print(True)
+        
     """
     This function obtains the song stored on an rfid tag and plays it on spotify
     @param rfidID: This is the ID of the rfid tag with the desired song to play
@@ -80,12 +97,23 @@ class SpotifyApi:
 if __name__ == "__main__":
     sp = SpotifyApi()
 
-    sp.updateMap(1, "Umbrella", "Rihanna")
+    """sp.updateMap(1, "Umbrella", "Rihanna")
     sp.updateMap(2, "Wildest Dreams", "Taylor Swift")
     sp.updateMap(3, "Work Out", "J. Cole")
     sp.updateMap(4, "Gone Girl", "SZA")
+    sp.updateMap(5, "Traitor", "Olivia Rodrigo")"""
+    
+    #sp.getCurrentlyPlaying()
+    sp.updateMap(1, "Rock that Body", "Black Eyed Peas")
+    sp.updateMap(2, "Boy's a liar", "PinkPantheress")
+    sp.updateMap(3, "Waiting For Love", "Avicii")
+    sp.updateMap(4, "Vete", "Bad Bunny")
     sp.updateMap(5, "Traitor", "Olivia Rodrigo")
-
-    b = sp.playSong(3)
+    sp.updateMap(6, "Get Lucky (feat. Pharrell Williams & Nile Rodgers)", "Daft Punk")
+    sp.updateMap(7, "Wonderland", "Taylor Swift")
+    sp.updateMap(8, "New Romantics", "Taylor Swift")
+    
+    b = sp.playSong(8)
     print(b)
+
 
