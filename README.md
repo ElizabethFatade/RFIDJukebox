@@ -1,4 +1,7 @@
 # RFIDJukebox
 
-![Hardware Block Diagram](https://drive.google.com/file/d/1U2T4ZQSZBeHEv_uiEjkN_bSjoLBAmWuQ/view?usp=share_link)
+## Hardware Block Diagram
+![Hardware Block Diagram](https://github.com/ElizabethFatade/RFIDJukebox/blob/main/Proposal%20Hardware%20Block%20Diagram)
+
+## Software Flow Chart
 ![Software Flow Chart](https://github.com/ElizabethFatade/RFIDJukebox/blob/main/SoftwareFlowChart%20(1).png)
