@@ -93,7 +93,7 @@ def speechRecognition(audioFile):
     startUpAttempts = 0
 
     with sr.Microphone() as source:
-        print('Please start speaking..\n')
+        print('Please start speaking...\n')
         while True and startUpAttempts != 3:
             startUpAttempts += 1
             audio1 = r.listen(source, 3)
