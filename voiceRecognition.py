@@ -77,18 +77,92 @@ def play(file):
     p.terminate()
 
 def speechRecognition(audioFile):
-    r = sr.Recognizer()
+    """r = sr.Recognizer()
     audioF = sr.AudioFile(audioFile)
     with audioF as source:
         audio = r.record(source)
 
     print(type(audio))
-    r.recognize_google(audio)
+    r.recognize_google(audio)"""
+
+    r = sr.Recognizer()                    
+    keyWord1 = 'DJ'
+    keyWord2 = 'play track'
+    playCommand = False
+    attempts = 0
+    startUpAttempts = 0
+
+    with sr.Microphone() as source:
+        print('Please start speaking..\n')
+        while True and startUpAttempts != 3:
+            startUpAttempts += 1
+            audio1 = r.listen(source, 3)
+            try:
+                text1 = r.recognize_google(audio1)
+                if keyWord1.lower() in text1.lower():
+                    playCommand = True
+                    print('Start up Keyword detected in the speech.')
+                    print('Please give play command.')
+
+                    while playCommand and attempts != 3:
+                        attempts += 1
+                        audio2 = r.listen(source, 5)
+                        try:
+                            text2 = r.recognize_google(audio2)
+                            if keyWord2.lower() in text2.lower():
+                                print('Keyword detected in the speech.')
+                                print(text2)
+                                playCommand = False
+                                startUpAttempts = 3
+                               
+                            else:
+                                if attempts != 3:
+                                    print('Wrong command.')
+                                    print('Please speak again.')
+                                    print('in else')
+                                else:
+                                    print("done")
+               
+                        except Exception as e:
+                            if attempts != 3:
+                                print('in except')
+                                print('Wrong command.')
+                                print('Please speak again.')
+                            else:
+                                print("done")
+                   
+                    if attempts == 3:
+                        startUpAttempts = 3
+                else:
+                    if startUpAttempts != 3:
+                        print('Please speak again.')
+                        print('in else')
+                    else:
+                        print("done")
+
+            except Exception as e:
+                if startUpAttempts != 3:
+                    print('in except')
+                    print('Please speak again.')
+                else:
+                    print("done")
+
+
+        """print('Please start speaking..\n')
+        while True:
+            audio = r.listen(source)
+            try:
+                text = r.recognize_google(audio)
+                if keyWord.lower() in text.lower():
+                    print('Keyword detected in the speech.')
+                    print('Please speak again.')
+            except Exception as e:
+                print('Please speak again.')"""
 
 if __name__ == "__main__":
     #sound(data, fs=4000) # The do note was recorded using a lower sampling frequency of 4000
     #my_recording = record() # Say something wise
     #sound(my_recording)
-    record('output1.wav')
-    play('output1.wav')
+    #record('output1.wav')
+    #play('output1.wav')
     speechRecognition('output1.wav')
