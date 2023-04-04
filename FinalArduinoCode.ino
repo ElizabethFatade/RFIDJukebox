@@ -51,11 +51,11 @@ void setup() {
   SPI.begin();      // Initiate  SPI bus 
   mfrc522.PCD_Init();   // Initiate MFRC522 
  
-/*
+
   pinMode(upButtonPin, INPUT_PULLUP); //This is how I set up the up,down and grab buttons 
   pinMode(downButtonPin, INPUT_PULLUP); 
   pinMode(grabButtonPin, INPUT_PULLUP); 
-*/
+
  
   //SETUP FOR THE CLAW 
   pwm.begin();  
@@ -68,7 +68,8 @@ void setup() {
   setupMotor();  
 
   //Choose User Control Mode
-  chooseMode();
+  userMode = chooseMode(userMode, upButtonPin, downButtonPin, grabButtonPin, buttonState);
+  Serial.println(userMode);
 } 
  
  
@@ -87,7 +88,7 @@ void loop() {
       
      case 1:
       //Joysticks
-      break:
+      break;
 
      case 2:    
       //Right now 'V' sent on serial comm will trigger Rock Pi to start recording for 10s aautomatically
@@ -105,7 +106,7 @@ void loop() {
 } 
 
 
- void chooseMode() {
+int chooseMode(int userMode, const char pinNumber1, const char pinNumber2, const char pinNumber3, bool buttonState) {
   Serial.println("------------------------------------------------");
   Serial.println("Choose how you would like to control the Jukebox");
   Serial.println("------------------------------------------------");
@@ -114,26 +115,37 @@ void loop() {
   Serial.println("Right button - Voice control");
   Serial.println("------------------------------------------------");
 
-  userMode = -1;
-
-  while(userMode < 0);
-    if (digitalRead(upButtonPin) == LOW) { // If left button is pressed
-      userMode = 0;
-      Serial.println("Selected mode: Pushbuttons"); 
-      delay(500); // Wait for 500ms to avoid button bouncing
-    }
-  
-    if (digitalRead(grabButtonPin) == LOW) { // If middle button is pressed
-      userMode = 1;
-      Serial.println("Selected mode: Joysticks"); 
-      delay(500); // Wait for 500ms to avoid button bouncing
-    }
-  
-    if (digitalRead(downButtonPin) == LOW) { // If right button is pressed
-      userMode = 2;
-      Serial.println("Selected mode: Voice control");
-      delay(500); // Wait for 500ms to avoid button bouncing
-    }
+  while(userMode < 0){
+      bool buttonPushed1 = digitalRead(pinNumber1);
+      bool buttonPushed2 = digitalRead(pinNumber2);
+      bool buttonPushed3 = digitalRead(pinNumber3);      
+      
+      if ((buttonPushed3 == buttonState) && (pinNumber3 == grabButtonPin)){ 
+        Serial.println("Joysticks");  
+        userMode = 1;     
+        delay(450); 
+        while(digitalRead(pinNumber3) == buttonState){ 
+        }   
+      } 
+       
+      if ((buttonPushed1 == buttonState) && (pinNumber1 == upButtonPin)){       
+        Serial.println("Voice Control");
+        userMode = 2;   
+        delay(450); 
+        while(digitalRead(pinNumber1) == buttonState){ 
+        }    
+      } 
+     
+     
+      if ((buttonPushed2 == buttonState) && (pinNumber2 == downButtonPin)){      
+        Serial.println("Pushbuttons"); 
+        userMode = 0;      
+        delay(450); 
+        while(digitalRead(pinNumber2) == buttonState){ 
+        }    
+      }  
+  }
+  return userMode;
  }
  
 int pulseWidth(int angle){  
@@ -229,7 +241,7 @@ void checkPush(const char pinNumber, bool buttonState) { //This function determi
   if ((buttonPushed == buttonState) && (pinNumber == upButtonPin)){ 
  
     armLevel = armCounter(pinNumber, armLevel, false); 
-    Serial.print("going up to level ");
+    Serial.print("Going up to level ");
     Serial.println(armLevel); 
     moveMotor(distance);     
     delay(450); 
@@ -241,7 +253,7 @@ void checkPush(const char pinNumber, bool buttonState) { //This function determi
   if ((buttonPushed == buttonState) && (pinNumber == downButtonPin)){ 
      
     armLevel = armCounter(pinNumber, armLevel, false); 
-    Serial.print("going down to level ");
+    Serial.print("Going down to level ");
     Serial.println(armLevel);     
     moveMotor(-distance);   
     delay(450); 
@@ -249,6 +261,7 @@ void checkPush(const char pinNumber, bool buttonState) { //This function determi
     }    
   }    
 } 
+
  
  
 bool returnCheckPush (const char pinNumber, bool buttonState, int armLevel){ 
@@ -272,6 +285,9 @@ int armCounter(const char pinNumber, int armLevel, bool startOver){
   }
   if((pinNumber == downButtonPin) && (startOver == false)){
     armLevel = armLevel-1;
+    if(armLevel == -1){
+      armLevel = 0;
+    }
   }
   if((pinNumber == grabButtonPin) && (startOver == true)){
     armLevel = 0;
