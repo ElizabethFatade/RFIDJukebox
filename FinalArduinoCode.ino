@@ -7,7 +7,6 @@
 
 
  //Setup values for the RFID Scanner 
-
 #define SS_PIN 10 
 #define RST_PIN 9 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
@@ -25,21 +24,21 @@ AccelStepper RailStepper(1,8,9); //This is the stepper motor setup
 ezButton limitSwitch(4); //This is the limit Switch at the bottom of the rail 
 ezButton limitSwitch2(6); //This is the limit Switch at the top of the rail
  
- 
-const char grabButtonPin = 5; //Button to grab the card 
+
 const char upButtonPin = 2; //Button to go up 
+const char grabButtonPin = 5; //Button to grab the card 
 const char downButtonPin = 3; //Button to go down 
  
  
 int armLevel = 0;
 bool startOver = false; 
  
- 
 const int motorSpeed = 400;//Value that makes motor move at a certain speed 
 const int distance = 1300; //Value that makes motor move a certain amount 
 
 bool buttonState = false; 
- 
+
+int userMode = -1; //0 - Pushbuttons, 1 - Joysticks, 2 - User control
  
 void setup() { 
   // SETUP FOR THE ARM: 
@@ -52,36 +51,90 @@ void setup() {
   SPI.begin();      // Initiate  SPI bus 
   mfrc522.PCD_Init();   // Initiate MFRC522 
  
- 
+/*
   pinMode(upButtonPin, INPUT_PULLUP); //This is how I set up the up,down and grab buttons 
   pinMode(downButtonPin, INPUT_PULLUP); 
   pinMode(grabButtonPin, INPUT_PULLUP); 
-
-  
- 
+*/
  
   //SETUP FOR THE CLAW 
   pwm.begin();  
   pwm.setPWMFreq(FREQUENCY);  // Analog servos run at ~60 Hz updates 
- 
  
    
   // NEXT SET OF COMMANDS ZEROES THE WHOLE SYSTEM 
   setupClaw(); 
   delay(500); 
   setupMotor();  
+
+  //Choose User Control Mode
+  chooseMode();
 } 
  
  
 void loop() { 
   // put your main code here, to run repeatedly: 
-   
-  checkPush(upButtonPin, buttonState); 
-  checkPush(downButtonPin, buttonState);  
-  checkPush(grabButtonPin, buttonState); 
+  
+  //Switch case can eb changed to if statements if bothersome
+  switch(userMode) {          
+    case 0:
+      while(userMode == 0) {
+        checkPush(upButtonPin, buttonState); 
+        checkPush(downButtonPin, buttonState);  
+        checkPush(grabButtonPin, buttonState); 
+      }
+      break;
+      
+     case 1:
+      //Joysticks
+      break:
+
+     case 2:    
+      //Right now 'V' sent on serial comm will trigger Rock Pi to start recording for 10s aautomatically
+      while(userMode == 2) {
+          if (Serial.available()) { // If data is available on the serial port
+            char voiceCardNumber = Serial.read();
+            Serial.print("You have selected card: ");
+            Serial.println(voiceCardNumber);
+
+            //Move motor and grab card based on card number
+          }
+      }
+  }
   
 } 
- 
+
+
+ void chooseMode() {
+  Serial.println("------------------------------------------------");
+  Serial.println("Choose how you would like to control the Jukebox");
+  Serial.println("------------------------------------------------");
+  Serial.println("Left button - Pushbuttons");
+  Serial.println("Middle button - Joysticks");
+  Serial.println("Right button - Voice control");
+  Serial.println("------------------------------------------------");
+
+  userMode = -1;
+
+  while(userMode < 0);
+    if (digitalRead(upButtonPin) == LOW) { // If left button is pressed
+      userMode = 0;
+      Serial.println("Selected mode: Pushbuttons"); 
+      delay(500); // Wait for 500ms to avoid button bouncing
+    }
+  
+    if (digitalRead(grabButtonPin) == LOW) { // If middle button is pressed
+      userMode = 1;
+      Serial.println("Selected mode: Joysticks"); 
+      delay(500); // Wait for 500ms to avoid button bouncing
+    }
+  
+    if (digitalRead(downButtonPin) == LOW) { // If right button is pressed
+      userMode = 2;
+      Serial.println("Selected mode: Voice control");
+      delay(500); // Wait for 500ms to avoid button bouncing
+    }
+ }
  
 int pulseWidth(int angle){  
  
