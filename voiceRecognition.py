@@ -1,7 +1,6 @@
 """import numpy as np
 from scipy.io import wavfile
 import pyaudio
-
 def sound(array, fs=8000):
     p = pyaudio.PyAudio()
     stream = p.open(format=pyaudio.paInt16, channels=len(array.shape), rate=fs, output=True)
@@ -9,7 +8,6 @@ def sound(array, fs=8000):
     stream.stop_stream()
     stream.close()
     p.terminate()
-
 def record(duration=3, fs=8000):
     nsamples = duration*fs
     p = pyaudio.PyAudio()
@@ -42,7 +40,7 @@ def record(outputFile):
                     input=True,
                     frames_per_buffer=CHUNK)
 
-    print("Recording....")
+    #print("Recording....")
     frames = []
     for i in range(0, int(RATE/CHUNK *DURATION)):
         data = stream.read(CHUNK)
@@ -76,17 +74,17 @@ def play(file):
     stream.close()
     p.terminate()
 
-def speechRecognition(audioFile):
+def speechRecognition():
     """r = sr.Recognizer()
     audioF = sr.AudioFile(audioFile)
     with audioF as source:
         audio = r.record(source)
-
     print(type(audio))
     r.recognize_google(audio)"""
 
     r = sr.Recognizer()                    
-    keyWord1 = 'DJ'
+    #keyWord1 = 'DJ'
+    keyWord1 = 'Hello'
     keyWord2 = 'play track'
     playCommand = False
     attempts = 0
@@ -95,9 +93,11 @@ def speechRecognition(audioFile):
     with sr.Microphone() as source:
         print('Please start speaking...\n')
         while True and startUpAttempts != 3:
+            print("heey")
             startUpAttempts += 1
-            audio1 = r.listen(source, 3)
+            audio1 = r.listen(source, 5)
             try:
+                print("hey")
                 text1 = r.recognize_google(audio1)
                 if keyWord1.lower() in text1.lower():
                     playCommand = True
@@ -114,6 +114,18 @@ def speechRecognition(audioFile):
                                 print(text2)
                                 playCommand = False
                                 startUpAttempts = 3
+                                
+                                text2_list = text2.split()
+                                trackSelect = text2_list[-1]
+                                print(trackSelect)
+                                
+                                try:
+                                    trackNum = int(trackSelect)
+                                    print(trackNum)
+                                    return trackNum
+                                except ValueError:
+                                    print("No valid integer following /'Play track/'")
+                                    return -1
                                
                             else:
                                 if attempts != 3:
@@ -146,6 +158,7 @@ def speechRecognition(audioFile):
                     print('Please speak again.')
                 else:
                     print("done")
+        return -1
 
 
         """print('Please start speaking..\n')
@@ -165,4 +178,4 @@ if __name__ == "__main__":
     #sound(my_recording)
     #record('output1.wav')
     #play('output1.wav')
-    speechRecognition('output1.wav')
+    speechRecognition()
