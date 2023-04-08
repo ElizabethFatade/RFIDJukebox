@@ -136,39 +136,28 @@ class SpotifyApi:
             #return playTrack
         #except:
             #print("An exception occurred")
-        
+
 
 # MAIN
 if __name__ == "__main__":
     sp = SpotifyApi()
     
     #sp.getCurrentlyPlaying()
-    #1
     sp.updateMap(1, "Rock that Body", "Black Eyed Peas")
-    #2
     sp.updateMap(2, "Boy's a liar", "PinkPantheress")
-    #3
     sp.updateMap(3, "Waiting For Love", "Avicii")
-    #4
     sp.updateMap(4, "Vete", "Bad Bunny")
-    #5
     sp.updateMap(5, "Traitor", "Olivia Rodrigo")#
-    #6
     sp.updateMap(6, "Get Lucky (feat. Pharrell Williams & Nile Rodgers)", "Daft Punk")
-    #7
     sp.updateMap(7, "Wonderland", "Taylor Swift")
-    #8
     sp.updateMap(8, "Wildest Dreams", "Taylor Swift")
-    #9
     sp.updateMap(9, "Gone Girl", "SZA")
-    #10
     sp.updateMap(0, "Work Out", "J. Cole")
     
     #sp.playSong("D8 28 15 21")
     
-    record('output1.wav')
-    #play('output1.wav')
-    #speechRecognition('output1.wav')
+#    record('output1.wav')
+#    trackNum = speechRecognition('output1.wav')
     
     
     # Code to catch UID here
@@ -182,13 +171,21 @@ if __name__ == "__main__":
         print(data, end = '')
         
         # The user wishes to give a voice commmand
-        #if data == 'V':
-            #record('output1.wav')
-            #play('output1.wav')
-            #speechRecognition('output1.wav')
-            
-            #Get transcript and send card selection back to Arduino
+        if data == 'V':
+            print("In voice control")
+            trackNum = str(speechRecognition())
         
+            #Read the data
+            data = uart.readStr(1)
+            print(data, end = '')
+            
+            #Send trackNum to Arduino
+            for i in range(10):
+                char_code = ord(trackNum)
+                uart.write(bytearray([char_code]))
+                print(bytearray([char_code]))
+                print(trackNum)
+
         
         # To grab card UID
         if data == ':':
@@ -197,7 +194,6 @@ if __name__ == "__main__":
             uid = sp.getID(UID)
             print(uid)
             
-          
             #The following lines activates the Spotify API process
             #b = sp.playSong(uid)
             #print(b)            
