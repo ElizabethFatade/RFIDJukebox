@@ -16,7 +16,7 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();  
 #define MIN_PULSE_WIDTH       650  
 #define MAX_PULSE_WIDTH       2350  
-#define FREQUENCY             60  
+#define FREQUENCY             40  
  
  
 //These setup values are for the stepper motor on the Arm 
@@ -68,8 +68,8 @@ void setup() {
   setupMotor();  
 
   //Choose User Control Mode
-  userMode = chooseMode(userMode, upButtonPin, downButtonPin, grabButtonPin, buttonState);
-  Serial.println(userMode);
+ // userMode = chooseMode(userMode, upButtonPin, downButtonPin, grabButtonPin, buttonState);
+  //Serial.println(userMode);
 } 
  
  
@@ -77,13 +77,20 @@ void loop() {
   // put your main code here, to run repeatedly: 
   
   //Switch case can eb changed to if statements if bothersome
-  switch(userMode) {          
-    case 0:
-      while(userMode == 0) {
-        checkPush(upButtonPin, buttonState); 
-        checkPush(downButtonPin, buttonState);  
-        checkPush(grabButtonPin, buttonState); 
+  switch(userMode) {  
+    case -1:
+      //Serial.println("Starting chooseMode");
+      while(userMode == -1) { 
+        userMode = chooseMode(userMode, upButtonPin, downButtonPin, grabButtonPin, buttonState);       
       }
+    case 0:
+     // Serial.println("Starting Pushbutton mode");
+      while(userMode == 0) {
+        userMode = checkPush(upButtonPin, buttonState); 
+        userMode = checkPush(downButtonPin, buttonState);  
+        userMode = checkPush(grabButtonPin, buttonState); 
+      }
+      return userMode;
       break;
       
      case 1:
@@ -92,14 +99,10 @@ void loop() {
 
      case 2:    
       //Right now 'V' sent on serial comm will trigger Rock Pi to start recording for 10s aautomatically
+     // Serial.println("Starting voice control mode");
       while(userMode == 2) {
-          if (Serial.available()) { // If data is available on the serial port
-            char voiceCardNumber = Serial.read();
-            Serial.print("You have selected card: ");
-            Serial.println(voiceCardNumber);
-
-            //Move motor and grab card based on card number
-          }
+        userMode = checkSerialMonitor();
+          
       }
   }
   
@@ -115,13 +118,17 @@ int chooseMode(int userMode, const char pinNumber1, const char pinNumber2, const
   Serial.println("Right button - Voice control");
   Serial.println("------------------------------------------------");
 
+
+  Serial.print("userMode is: ");
+  Serial.println(userMode);
+
   while(userMode < 0){
       bool buttonPushed1 = digitalRead(pinNumber1);
       bool buttonPushed2 = digitalRead(pinNumber2);
       bool buttonPushed3 = digitalRead(pinNumber3);      
       
       if ((buttonPushed3 == buttonState) && (pinNumber3 == grabButtonPin)){ 
-        Serial.println("Joysticks");  
+        Serial.println("joysticks");  
         userMode = 1;     
         delay(450); 
         while(digitalRead(pinNumber3) == buttonState){ 
@@ -129,7 +136,7 @@ int chooseMode(int userMode, const char pinNumber1, const char pinNumber2, const
       } 
        
       if ((buttonPushed1 == buttonState) && (pinNumber1 == upButtonPin)){       
-        Serial.println("Voice Control");
+        Serial.println("voice control");
         userMode = 2;   
         delay(450); 
         while(digitalRead(pinNumber1) == buttonState){ 
@@ -138,7 +145,7 @@ int chooseMode(int userMode, const char pinNumber1, const char pinNumber2, const
      
      
       if ((buttonPushed2 == buttonState) && (pinNumber2 == downButtonPin)){      
-        Serial.println("Pushbuttons"); 
+        Serial.println("pushbuttons"); 
         userMode = 0;      
         delay(450); 
         while(digitalRead(pinNumber2) == buttonState){ 
@@ -147,15 +154,18 @@ int chooseMode(int userMode, const char pinNumber1, const char pinNumber2, const
   }
   return userMode;
  }
+
  
 int pulseWidth(int angle){  
  
- 
+  
   int pulse_wide, analog_value;  
   pulse_wide = map(angle,0, 180, MIN_PULSE_WIDTH,MAX_PULSE_WIDTH);// map angle of 0 to 180 to Servo min and Servo max   
  
  
-  analog_value = int(float(pulse_wide) / 1000000 * FREQUENCY * 4096);  
+  analog_value = int(float(pulse_wide) / 1000000 * FREQUENCY * 4096); 
+
+  
   //Serial.println(analog_value);  
   return analog_value;   
  
@@ -199,38 +209,95 @@ void setupMotor(){ //This function sends the arm all the way down
  
 void setupClaw(){ 
    // Shoulder twist  
-   pwm.setPWM(12, 0, pulseWidth(145)); // zero is 90, 120 is to grab and take the card
+   pwm.setPWM(12, 0, pulseWidth(170)); // zero is 170, 155 is to take the card
    delay(600);   
  
  
    // Shoulder up/down  
-   pwm.setPWM(13, 0, pulseWidth(70)); // zero is 50, 120 is to grab the card
+   pwm.setPWM(13, 0, pulseWidth(150)); // zero is 150, 180 is to grab the card
    delay(600);  
  
  
    // Elbow  
-   pwm.setPWM(14, 0, pulseWidth(70)); // zero is 60, 5 is to grab the card 
+   pwm.setPWM(14, 0, pulseWidth(70)); // zero is 70, 5 is to grab the card 
    delay(600);  
  
  
    // Claw  
    pwm.setPWM(15, 0, pulseWidth(40)); // Open is 40, 55 is to grab the card  
+   
    delay(600);  
  
  
-} 
+}
+
+ int voiceCommandMotor(char voiceCardNumber){
+  Serial.println("Starting voiceCommandMotor");
+
+  Serial.flush();
+  
+  int level = 0;
+  
+  if(voiceCardNumber == '1'){
+    level = 0;
+  }
+  else if(voiceCardNumber == '2'){
+    level = 1;
+  }
+  else if(voiceCardNumber == '3'){
+    level = 2;
+  }
+  else if(voiceCardNumber == '4'){
+    level = 3;
+  }
+  else if(voiceCardNumber == '5'){
+    level = 4;
+  }
+
+  delay(200);
+  moveMotor(level*distance);
+  delay(1000);
+  userMode = grabCard(level);
+
+  return userMode;
+
+  
+}
+
+int checkSerialMonitor(){  
+  
+  //Serial.println("Starting checkSerialMonitor");
+  char voiceCardNumber;
+
+  if (Serial.available() > 0) { // If data is available on the serial port
+            
+            voiceCardNumber = Serial.read();
+            //Serial.println(voiceCardNumber);
+            if(voiceCardNumber == '1' || voiceCardNumber == '2' || voiceCardNumber == '3' || voiceCardNumber == '4' || voiceCardNumber == '5'){ 
+                Serial.print("You have selected card: ");
+                Serial.print(voiceCardNumber);
+                Serial.println(" ");
+
+                delay(2000) ;
+                userMode = voiceCommandMotor(voiceCardNumber);
+             
+            }
+   }
+
+   return userMode;
+}
+
+
  
  
-void checkPush(const char pinNumber, bool buttonState) { //This function determines which button is pressed 
+int checkPush(const char pinNumber, bool buttonState) { //This function determines which button is pressed 
    
   bool buttonPushed = digitalRead(pinNumber); 
   
   
   if ((buttonPushed == buttonState) && (pinNumber == grabButtonPin)){ 
     Serial.println("grab button"); 
-    
-    
-    grabCard(armLevel); 
+    userMode = grabCard(armLevel); 
     armLevel = armCounter(pinNumber, armLevel, true);      
     delay(450); 
     while(digitalRead(pinNumber) == buttonState){ 
@@ -259,7 +326,8 @@ void checkPush(const char pinNumber, bool buttonState) { //This function determi
     delay(450); 
     while(digitalRead(pinNumber) == buttonState){ 
     }    
-  }    
+  }
+  return userMode;    
 } 
 
  
@@ -269,13 +337,14 @@ bool returnCheckPush (const char pinNumber, bool buttonState, int armLevel){
   bool buttonPushed = digitalRead(pinNumber); 
    
   if ((buttonPushed == buttonState) && (pinNumber == grabButtonPin)){ 
-    returnCard(armLevel); 
+    userMode = returnCard(armLevel); 
     return false;   
     delay(450); 
     while(digitalRead(pinNumber) == buttonState){ 
     } 
   } 
-  return true; 
+  return true;
+  
 } 
 
 int armCounter(const char pinNumber, int armLevel, bool startOver){
@@ -329,106 +398,150 @@ void moveMotor(int distance){ //Depending on which button is pressed, this funct
 } 
  
  
-void grabCard(int armLevel) { 
+int grabCard(int armLevel) { 
  
  
    bool clawState = true; 
    //CLAW GRABS THE CARD
 
    // Shoulder up/down  
-   pwm.setPWM(13, 0, pulseWidth(80)); // zero is 50, 80 is to grab the card
-//   moveServo(13, 90);
+   pwm.setPWM(13, 0, pulseWidth(165)); // zero is 150, 180 is to grab the card
+
    delay(600);
     
    // Elbow  
    pwm.setPWM(14, 0, pulseWidth(5)); // Bend in towards card 
-//   moveServo(14, 25);
-   delay(600);  
+
+   delay(600);
  
  
    // Claw  
    pwm.setPWM(15, 0, pulseWidth(65)); // Close
-//   moveServo(15, 65); 
+
+
+   delay(600);
+  
+    
+   // Elbow  
+   pwm.setPWM(14, 0, pulseWidth(2)); // Bend in towards card 
+   delay(400);
+   // Shoulder up/down
+   pwm.setPWM(13, 0, pulseWidth(155)); // zero is 150, 180 is to grab the card
+
+   
    delay(700);  
  
  
    //CLAW TAKES THE CARD TOWARDS SCANNER
-   //Shoulder 
-   pwm.setPWM(12, 0, pulseWidth(125)); //Bend out 
-//   moveServo(12, 125);
+   //Shoulder twist
+   delay(400);
+   pwm.setPWM(12, 0, pulseWidth(160)); //Shoulder tilts back up 
+   delay(400);
+   pwm.setPWM(12, 0, pulseWidth(150)); //Shoulder tilts back up 
+   delay(400);
+   pwm.setPWM(12, 0, pulseWidth(145)); //Shoulder tilts back up 
+   delay(600);
+   pwm.setPWM(12, 0, pulseWidth(145)); 
+
    delay(900);
 
    // Shoulder up/down  
-   pwm.setPWM(13, 0, pulseWidth(5)); // zero is 50, 120 is to grab the card
-//   moveServo(13, 0);
+   pwm.setPWM(13, 0, pulseWidth(110));
+
    delay(600); 
 
     // Elbow  
-   pwm.setPWM(14, 0, pulseWidth(30)); // Bend  
-//   moveServo(14, 30);
+   pwm.setPWM(14, 0, pulseWidth(25)); // Bend  
+
    delay(1000);
     
    setupMotor(); 
    delay(750); 
  
  
-   pwm.setPWM(12, 0, pulseWidth(150)); //Shoulder tilt down 
-//   moveServo(12, 150);
+   pwm.setPWM(12, 0, pulseWidth(185)); //Shoulder tilt down 
 
-   delay(1000);
+
+   delay(2000);
    Serial.println("Loading music");
    readCard();
+   delay(2000);
     
    while(clawState != false){    
     clawState = returnCheckPush (grabButtonPin, buttonState, armLevel);
      
    } 
+   if(clawState == false){
+    userMode = -1;
+   }
+
+   return userMode;
 
    
 } 
  
  
-void returnCard(int armLevel){//This is a temporary function of what the arm will do once its done playing music 
+int returnCard(int armLevel){//This is a temporary function of what the arm will do once its done playing music 
   Serial.println("Stopping music");
 
-  //This is where I want the code to read the serial monitor 
+  //Shoulder
+  pwm.setPWM(12, 0, pulseWidth(170)); //Shoulder tilts back up 
+  delay(400);
+  pwm.setPWM(12, 0, pulseWidth(160)); //Shoulder tilts back up 
+  delay(400);
+  pwm.setPWM(12, 0, pulseWidth(150)); //Shoulder tilts back up 
+  delay(400);
+  pwm.setPWM(12, 0, pulseWidth(145)); //Shoulder tilts back up 
+  delay(600);
 
-  //I want to name the int from the serial monitor count
 
-  delay(200);
+  //delay(200);
   moveMotor(armLevel*distance);
   delay(1000);
    
-  //Shoulder
-  pwm.setPWM(12, 0, pulseWidth(125)); //Shoulder tilts back up 
-  delay(700);
+  
 
    //Elbow 
-   pwm.setPWM(14, 0, pulseWidth(5)); // Bend  
+   pwm.setPWM(14, 0, pulseWidth(3)); // Bend  
    delay(700);
 
-  // Shoulder up/down  
-   pwm.setPWM(13, 0, pulseWidth(80)); // zero is 50, 90 is to grab the card
-   delay(700);
+  // Shoulder up/down 
 
    
+   pwm.setPWM(13, 0, pulseWidth(120));
+   delay(400);
+   pwm.setPWM(13, 0, pulseWidth(130));
+   delay(400);
+   pwm.setPWM(13, 0, pulseWidth(140));
+   delay(400);
+   pwm.setPWM(13, 0, pulseWidth(150));
+   delay(400);
+   pwm.setPWM(13, 0, pulseWidth(162));
+   delay(700);
 
    //Shoulder
-  pwm.setPWM(12, 0, pulseWidth(145)); //Shoulder tilts back down to leave card 
+  pwm.setPWM(12, 0, pulseWidth(165)); //Shoulder tilts back down to leave card 
   delay(700);
 
   // Claw  
    pwm.setPWM(15, 0, pulseWidth(40)); // Open 
    delay(600);
-  
+
+   
+   pwm.setPWM(13, 0, pulseWidth(150));//Shoulder up/down
+   delay(400);
    //Elbow 
-   pwm.setPWM(14, 0, pulseWidth(90)); // Bend  
+   pwm.setPWM(14, 0, pulseWidth(60)); // Bend  
    delay(600);
 
 
    setupClaw();
    delay(200);
    setupMotor();
+   delay(300);
+  
+   int userMode = -1;
+   return userMode;
   
    
 } 
@@ -479,7 +592,7 @@ void readCard() {
   //Show UID on serial monitor 
   
   Serial.print("UID tag :"); 
-  delay(800);
+  delay(400);
   String content= ""; 
   byte letter; 
   for (byte i = 0; i < mfrc522.uid.size; i++)  
@@ -493,22 +606,3 @@ void readCard() {
   delay(800);
   Serial.println(" ");  
 } 
-
-void moveServo(int pinNum, int dest) {
-
-  int i = pwm.getPWM(pinNum);
-  if(i < dest) {
-    while (i < dest) { //ex 30 -> 90
-      pwm.setPWM(pinNum, 0, pulseWidth(i));
-      i++;
-      delay(10);
-    }
-  }
-  else {
-    while (i > dest) { //eg 90 -> 30
-      pwm.setPWM(pinNum, 0, pulseWidth(i));
-      i--;
-      delay(10);
-    }
-  }
-}
