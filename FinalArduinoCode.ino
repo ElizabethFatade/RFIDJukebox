@@ -16,7 +16,7 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();  
 #define MIN_PULSE_WIDTH       650  
 #define MAX_PULSE_WIDTH       2350  
-#define FREQUENCY             40  
+#define FREQUENCY             60  
  
  
 //These setup values are for the stepper motor on the Arm 
@@ -232,7 +232,7 @@ void setupClaw(){
 }
 
  int voiceCommandMotor(char voiceCardNumber){
-  Serial.println("Starting voiceCommandMotor");
+  Serial.println("Starting VoiceCommandMotor");
 
   Serial.flush();
   
@@ -405,7 +405,7 @@ int grabCard(int armLevel) {
    //CLAW GRABS THE CARD
 
    // Shoulder up/down  
-   pwm.setPWM(13, 0, pulseWidth(165)); // zero is 150, 180 is to grab the card
+   pwm.setPWM(13, 0, pulseWidth(160)); // zero is 150, 180 is to grab the card
 
    delay(600);
     
@@ -434,13 +434,13 @@ int grabCard(int armLevel) {
  
    //CLAW TAKES THE CARD TOWARDS SCANNER
    //Shoulder twist
-   delay(400);
-   pwm.setPWM(12, 0, pulseWidth(160)); //Shoulder tilts back up 
-   delay(400);
-   pwm.setPWM(12, 0, pulseWidth(150)); //Shoulder tilts back up 
-   delay(400);
-   pwm.setPWM(12, 0, pulseWidth(145)); //Shoulder tilts back up 
-   delay(600);
+//   delay(400);
+//   pwm.setPWM(12, 0, pulseWidth(160)); //Shoulder tilts back up 
+//   delay(400);
+//   pwm.setPWM(12, 0, pulseWidth(150)); //Shoulder tilts back up 
+//   delay(400);
+//   pwm.setPWM(12, 0, pulseWidth(145)); //Shoulder tilts back up 
+//   delay(600);
    pwm.setPWM(12, 0, pulseWidth(145)); 
 
    delay(900);
@@ -485,17 +485,17 @@ int returnCard(int armLevel){//This is a temporary function of what the arm will
   Serial.println("Stopping music");
 
   //Shoulder
-  pwm.setPWM(12, 0, pulseWidth(170)); //Shoulder tilts back up 
-  delay(400);
-  pwm.setPWM(12, 0, pulseWidth(160)); //Shoulder tilts back up 
-  delay(400);
-  pwm.setPWM(12, 0, pulseWidth(150)); //Shoulder tilts back up 
-  delay(400);
+//  pwm.setPWM(12, 0, pulseWidth(170)); //Shoulder tilts back up 
+//  delay(400);
+//  pwm.setPWM(12, 0, pulseWidth(160)); //Shoulder tilts back up 
+//  delay(400);
+//  pwm.setPWM(12, 0, pulseWidth(150)); //Shoulder tilts back up 
+//  delay(400);
   pwm.setPWM(12, 0, pulseWidth(145)); //Shoulder tilts back up 
   delay(600);
 
 
-  //delay(200);
+
   moveMotor(armLevel*distance);
   delay(1000);
    
@@ -508,28 +508,28 @@ int returnCard(int armLevel){//This is a temporary function of what the arm will
   // Shoulder up/down 
 
    
-   pwm.setPWM(13, 0, pulseWidth(120));
-   delay(400);
-   pwm.setPWM(13, 0, pulseWidth(130));
-   delay(400);
-   pwm.setPWM(13, 0, pulseWidth(140));
-   delay(400);
-   pwm.setPWM(13, 0, pulseWidth(150));
-   delay(400);
-   pwm.setPWM(13, 0, pulseWidth(162));
-   delay(700);
+//   pwm.setPWM(13, 0, pulseWidth(120));
+//   delay(400);
+//   pwm.setPWM(13, 0, pulseWidth(130));
+//   delay(400);
+//   pwm.setPWM(13, 0, pulseWidth(140));
+//   delay(400);
+//   pwm.setPWM(13, 0, pulseWidth(150));
+//   delay(400);
+   pwm.setPWM(13, 0, pulseWidth(155));
+   delay(800);
 
    //Shoulder
-  pwm.setPWM(12, 0, pulseWidth(165)); //Shoulder tilts back down to leave card 
-  delay(700);
+  pwm.setPWM(12, 0, pulseWidth(170)); //Shoulder tilts back down to leave card 
+  delay(900);
 
   // Claw  
    pwm.setPWM(15, 0, pulseWidth(40)); // Open 
    delay(600);
 
    
-   pwm.setPWM(13, 0, pulseWidth(150));//Shoulder up/down
-   delay(400);
+  // pwm.setPWM(13, 0, pulseWidth(150));//Shoulder up/down
+  // delay(400);
    //Elbow 
    pwm.setPWM(14, 0, pulseWidth(60)); // Bend  
    delay(600);
