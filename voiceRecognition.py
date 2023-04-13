@@ -84,8 +84,9 @@ def speechRecognition():
 
     r = sr.Recognizer()                    
     #keyWord1 = 'DJ'
-    keyWord1 = 'Hello'
+    keyWord1 = 'Hey DJ'
     keyWord2 = 'play track'
+    #keyword3 = "track"
     playCommand = False
     attempts = 0
     startUpAttempts = 0
@@ -95,7 +96,7 @@ def speechRecognition():
         while True and startUpAttempts != 3:
             print("heey")
             startUpAttempts += 1
-            audio1 = r.listen(source, 5)
+            audio1 = r.listen(source, 6)
             try:
                 print("hey")
                 text1 = r.recognize_google(audio1)
@@ -109,7 +110,7 @@ def speechRecognition():
                         audio2 = r.listen(source, 5)
                         try:
                             text2 = r.recognize_google(audio2)
-                            if keyWord2.lower() in text2.lower():
+                            if keyWord2.lower() in text2.lower(): #and keyWord3.lower() in text2.lower():
                                 print('Keyword detected in the speech.')
                                 print(text2)
                                 playCommand = False
@@ -118,9 +119,22 @@ def speechRecognition():
                                 text2_list = text2.split()
                                 trackSelect = text2_list[-1]
                                 print(trackSelect)
+                                if trackSelect.lower() == "one":
+                                    trackSelect = 1
+                                elif trackSelect.lower() == "two":
+                                    trackSelect = 2
+                                elif trackSelect.lower() == "three":
+                                    trackSelect = 3
+                                elif trackSelect.lower() == "four":
+                                    trackSelect = 4
+                                elif trackSelect.lower() == "five":
+                                    trackSelect = 5
+                                print(trackSelect)
                                 
                                 try:
+                                    
                                     trackNum = int(trackSelect)
+                                    
                                     print(trackNum)
                                     return trackNum
                                 except ValueError:
